@@ -84,19 +84,33 @@ class TestBooksCollector:
         favorite_collection.add_book_in_favorites(name)
         assert name in favorite_collection.favorites
 
-    def test_delete_book_from_favorites(self):
+    @pytest.mark.parametrize('name', [
+        'Что делать, если ваш кот хочет вас убить',
+        'Гордость и предубеждение и зомби',
+        'Леди и бродяга'
+    ])
+    def test_delete_book_from_favorites(self, name):
         delete_favorite_book = BooksCollector()
-        delete_favorite_book.add_book_in_favorites('Что делать, если ваш кот хочет вас убить')
-        delete_favorite_book.delete_book_from_favorites('Что делать, если ваш кот хочет вас убить')
-        assert 'Что делать, если ваш кот хочет вас убить' not in delete_favorite_book.favorites
+        delete_favorite_book.add_new_book(name)
+        delete_favorite_book.add_book_in_favorites(name)
+        delete_favorite_book.delete_book_from_favorites(name)
+        assert name not in delete_favorite_book.favorites
 
-    @pytest.mark.parametrize ('name',
-                              ['Что делать, если ваш кот хочет вас убить',
-                               'Гордость и предубеждение и зомби',
-                               'Леди и бродяга'])
-    def test_get_list_of_favorites_books(self, name):
+    def test_get_list_of_favorites_books(self):
         favorite_books = BooksCollector()
-        favorite_books.add_new_book(name)
-        favorite_books.add_book_in_favorites(name)
-        favorites = favorite_books.get_list_of_favorites_books ()
-        assert name in favorites
+        favorite_books.add_new_book('Леди и бродяга')
+        favorite_books.add_book_in_favorites('Леди и бродяга')
+        favorites = favorite_books.get_list_of_favorites_books()
+        assert 'Леди и бродяга' in favorites
+
+    @pytest.mark.parametrize('book_name, expected', [
+        ('Книга с очень длинным названием которое превышает лимит в 40 символов', False),
+        ('Нормальная книга', True),
+        ('', False),  
+        ('К', True),  
+        ('К' * 40, True),  
+        ('К' * 41, False),  
+    ])
+    def test_add_new_book_name_length_validation(self, collector, book_name, expected):
+        collector.add_new_book(book_name)
+        assert (book_name in collector.get_books_genre()) == expected
